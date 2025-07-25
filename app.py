@@ -198,11 +198,3 @@ def crear_app():
 # Este bloque se ejecuta SOLAMENTE cuando el script se corre directamente (ej. 'python app.py').
 # NO se ejecuta cuando la aplicación es importada por un servidor WSGI como Gunicorn.
 # Es crucial que NO esté indentado dentro de ninguna función.
-if __name__ == "__main__":
-    # Llama a la función crear_app() para obtener la instancia de la aplicación Flask configurada.
-    app_instance = crear_app()
-    # Ejecuta la aplicación.
-    # 'host='0.0.0.0'' hace que la aplicación sea accesible desde cualquier dirección IP,
-    # lo cual es necesario en entornos de servidor.
-    # 'debug=True' habilita el modo de depuración (útil durante el desarrollo para ver errores).
-    app_instance.run(host='0.0.0.0', debug=True)
