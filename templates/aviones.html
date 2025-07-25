@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Resumen Aviones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap (opcional para estilos) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body class="bg-light text-dark p-4">
+
+    <div class="container">
+
+        <h2 class="mb-4">📄 Columnas del archivo de aviones:</h2>
+        <ul>
+            {% if columnas_aviones %}
+                {% for col in columnas_aviones %}
+                    <li>{{ col }}</li>
+                {% endfor %}
+            {% else %}
+                <li>⚠️ No hay columnas para mostrar.</li>
+            {% endif %}
+        </ul>
+
+        <h4 class="mt-5">👀 Vista previa del DataFrame:</h4>
+        {% if filas_aviones %}
+        <table class="table table-striped table-bordered">
+            <thead class="table-success">
+                <tr>
+                    {% for col in columnas_aviones %}
+                        <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for fila in filas_aviones %}
+                    <tr>
+                        {% for valor in fila %}
+                            <td>{{ valor }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p>⚠️ No hay datos para mostrar en la tabla.</p>
+        {% endif %}
+
+        <h3 class="mt-5">✈️ Gráfica de Aviones</h3>
+        <div class="d-flex justify-content-center mt-4">
+            <div id="grafico-aviones" style="width: 100%; max-width: 900px;"></div>
+        </div>
+
+        {% if graphJSON_aviones %}
+            <!-- JSON con los datos de Plotly -->
+            <script type="application/json" id="data-aviones">
+                {{ graphJSON_aviones | safe }}
+            </script>
+
+            <!-- Script que renderiza la gráfica cuando el DOM esté listo -->
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const graficoAviones = JSON.parse(
+                        document.getElementById('data-aviones').textContent
+                    );
+                    Plotly.newPlot('grafico-aviones', graficoAviones.data, graficoAviones.layout);
+                });
+            </script>
+        {% else %}
+            <p class="text-danger">❌ No se pudo cargar la gráfica de aviones.</p>
+        {% endif %}
+
+    </div>
+
+</body>
+</html>

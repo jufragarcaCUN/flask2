@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualización de Datos</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard de Datos</h1>
+
+        <div class="info-section">
+            <h2>Información del Archivo Excel</h2>
+            {% if columnas %}
+                <p><strong>Columnas encontradas:</strong> {{ columnas | join(', ') }}</p>
+            {% else %}
+                <p>No se encontraron columnas.</p>
+            {% endif %}
+
+            {% if registros is not none %}
+                <p><strong>Total de registros:</strong> {{ registros }}</p>
+            {% else %}
+                <p>No se pudo obtener el total de registros.</p>
+            {% endif %}
+        </div>
+
+        <h2>Gráfico Generado</h2>
+        <div class="chart-container">
+            {% if grafico %}
+                {{ grafico | safe }} {# Renderiza el HTML del gráfico de forma segura #}
+            {% else %}
+                <p class="error-message">No se pudo cargar el gráfico. Verifica la función Python.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

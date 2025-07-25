@@ -1,0 +1,25 @@
+<div class="card position-relative">
+  <div class="colorCarta">
+  <div class="card-body p-0">
+    <!-- Contenedor con posición relativa -->
+    <div class="position-relative w-100" style="height: 180px;">
+
+      <!-- Imagen de fondo -->
+      <img src="{{ url_for('static', filename='banner-navbar.png') }}"
+           alt="Banner"
+           class="img-fluid w-100"
+           style="height: 180px; object-fit: cover;">
+
+      <!-- Menú encima de la imagen -->
+      <div class="position-absolute top-50 start-50 translate-middle w-75">
+        <select class="form-select form-select-lg mb-2" aria-label="Menú sobre imagen">
+          <option selected>Selecciona una opción</option>
+          <option value="1">Hoja de vida estudiante</option>
+          <option value="2">Direccion</option>
+          <option value="3">otra Cosa</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>

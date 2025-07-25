@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Dashboard ✈️ Modelos Predictivos</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}" />
+    <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+    {# Carga SweetAlert2 aquí para que esté disponible #}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div class="bg-light p-0 m-0">
+        {% include 'cabecera.html' %}
+    </div>
+
+    <div class="container mt-4">
+        <div class="card text-center mb-4"> {# Agregada mb-4 para margen inferior #}
+            <div class="card-header colorCarta">
+                {# Puedes poner algo aquí si lo necesitas, o quitar el div si no lo usas #}
+            </div>
+            <div class="card-body colorCarta">
+                <h2 class="mb-0 text-center text-white">Visualización ✈️ de Predicciones por Edad</h2> {# mb-0 para ajustar margen del h2 #}
+            </div>
+            <div class="card-footer text-muted colorCarta">
+                {# Puedes poner algo aquí si lo necesitas, o quitar el div si no lo usas #}
+            </div>
+        </div>
+        
+        <div class="ContenedorFormulario p-4 rounded mb-4">
+            <form method="POST" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="programa" class="form-label selectores"><strong>Programa:</strong></label>
+                    <select id="programa" name="programa" class="form-select">
+                        <option value="">-- Todos --</option>
+                        {% for p in programas %}
+                            <option value="{{ p }}" {% if p == programa %}selected{% endif %}>{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="modelo" class="form-label selectores"><strong>M:</strong></label>
+                    <select id="modelo" name="modelo" class="form-select">
+                        <option value="Probabilidad_RANDOM FOREST" {% if modelo == "Probabilidad_RANDOM FOREST" %}selected{% endif %}>Random Forest</option>
+                        <option value="Probabilidad_XGBOOST" {% if modelo == "Probabilidad_XGBOOST" %}selected{% endif %}>XGBoost</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label selectores" ><strong>Rango de predicción (%):</strong></label>
+                    <div class="input-group">
+                        <input type="number" name="prob_min" value="{{ prob_min }}" step="0.1" class="form-control" placeholder="Mín" />
+                        <input type="number" name="prob_max" value="{{ prob_max }}" step="0.1" class="form-control" placeholder="Máx" />
+                    </div>
+                </div>
+
+                <div class="col-md-1 d-grid">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="mt-4">
+            <p><strong>Columnas:</strong> {{ columnas | join(', ') }}</p>
+            <p><strong>Registros filtrados:</strong> {{ registros }}</p>
+        </div>
+        
+        <div class="position-relative contenedorImagen">
+            <div id="spinner" class="spinner-border text-primary position-absolute top-50 start-50 translate-middle d-none" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <div id="chart" class="w-100" style="min-height: 500px;"></div>
+            <div id="graph-data" style="display:none;">{{ graphJSON | safe }}</div>
+        </div>
+    </div>
+
+    <div class="bg-transparent p-0 m-0">
+        {% include 'pie.html' %}
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const spinner = document.getElementById("spinner");
+            const graphText = document.getElementById("graph-data").textContent;
+            const chartDiv = document.getElementById("chart");
+
+            if (graphText && chartDiv) {
+                spinner.classList.remove("d-none"); // Muestra el spinner
+                try {
+                    const plotObj = JSON.parse(graphText);
+                    // Renderiza el gráfico y luego añade el manejador de eventos y oculta el spinner
+                    Plotly.newPlot("chart", plotObj.data, plotObj.layout, { responsive: true }).then(() => {
+                        spinner.classList.add("d-none"); // Oculta el spinner cuando el gráfico está listo
+
+                        // Evento para capturar el clic sobre un punto
+                        chartDiv.on('plotly_click', function(event) {
+                            // Asegúrate de que haya puntos seleccionados
+                            if (event.points.length > 0) {
+                                const punto = event.points[0];
+
+                                // Asegúrate de que custom no sea undefined
+                                // Si 'custom' debe venir de 'punto.customdata', ajusta la línea siguiente:
+                                const custom = punto.customdata; // Asumiendo que 'custom' viene de 'punto.customdata'
+                                
+                                if (custom) {
+                                    // Agrega un console.log para ver el contenido de 'custom'
+                                    // Abre la consola del navegador (F12) para ver esta información.
+                                    console.log("Datos 'custom' del punto clicado:", custom); 
+
+                                    const nombre = custom[0];         // DescRF_Nombre_Estudiante
+                                    const probabilidad = custom[1];   // Probabilidad del modelo (recuerda que modelo es el nombre de la columna)
+                                    const edad = custom[2];           // Edad
+                                    const programa = custom[3];       // DescRF_Programa - ¡Este es el que te interesa!
+
+                                    // Alerta personalizada con SweetAlert2
+                                    Swal.fire({
+                                        title: `✈️ Avión seleccionado`,
+                                        html: `
+                                            <strong>Nombre:</strong> ${nombre}<br>
+                                            <strong>Edad:</strong> ${edad} años<br>
+                                            <strong>Programa:</strong> ${programa}<br>
+                                            <strong>Probabilidad:</strong> ${probabilidad.toFixed(2)}%
+                                        `,
+                                        width: 600,
+                                        padding: '2em',
+                                        color: '#333',
+                                        background: "#fff url('{{ url_for('static', filename='') }}')",
+
+                                        backdrop: `
+                                            rgba(0,0,0,0.8)
+                                            url('{{ url_for('static', filename='cohete.gif') }}')
+                                            left top
+                                            no-repeat
+                                        `,
+                                        confirmButtonColor: '#29785F' // Azul por defecto de SweetAlert2 (ejemplo)
+                                    });
+                                }
+                            }
+                        }); 
+                    }).catch(error => {
+                        console.error("Error al renderizar Plotly:", error);
+                        spinner.classList.add("d-none"); // Oculta el spinner incluso si hay un error
+                        chartDiv.innerHTML = '<p class="text-danger text-center mt-5">No se pudo cargar el gráfico debido a un error de renderizado.</p>';
+                    });
+                } catch (e) {
+                    console.error("Error al parsear graphJSON:", e);
+                    spinner.classList.add("d-none"); // Oculta el spinner si el JSON es inválido
+                    chartDiv.innerHTML = '<p class="text-danger text-center mt-5">No se pudo cargar el gráfico. Datos inválidos en la respuesta del servidor.</p>';
+                }
+            } else if (chartDiv) { // Si no hay graphText, pero el div del gráfico existe
+                if (spinner) spinner.classList.add("d-none"); // Oculta el spinner
+                chartDiv.innerHTML = '<p class="text-muted text-center mt-5">No hay datos para mostrar el gráfico con los filtros aplicados. Intenta ajustar tus filtros.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+/* C:\Users\juan_garnicac\OneDrive - Corporación Unificada Nacional de Educación Superior - CUN\Escritorio\phyton\antiguos\aplicacionFlask\src\static\estilos.css */
+
+body {
+    background-image: url("/static/fondo.PNG");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    opacity: 0.9;
+}
+.colorCarta {
+    background-color: #333 !important;
+}
+
+/* Estilos para la gráfica */
+.ContenedorFormulario
+{
+    background-color: #333;
+
+}
+/* Estilos para la gráfica */
+.contenedorImagen {
+    opacity: 0.7;
+    transition: opacity 0.6s cubic-bezier(0.1, 0.7, 1.0, 0.1);
+}
+
+.contenedorImagen:hover {
+    opacity: 1;
+}
+/* Estilos para los titulos del formulario */
+.selectores {
+    color: white;
+}
+
+
+
+/* Estilos de footer */
+/* CSS PARA FOOTER */
+.footer {
+    background-color: rgba(255, 255, 255, 0.95);
+    font-size: 0.95rem;
+}
+
+.footer a {
+    color: #333;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: #0d6efd;
+    text-decoration: underline;
+}
+
+.footer h5 {
+    font-weight: 600;
+}
+
+.footer .footer-bottom {
+    background-color: #f8f9fa;
+}
+
+.footer i {
+    font-size: 1.1rem;
+}
