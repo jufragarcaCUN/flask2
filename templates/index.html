@@ -2,10 +2,17 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Test</title>
+    <title>Prueba de conexión</title>
 </head>
 <body>
-    <h1>🚀 ¡Hola desde Flask!</h1>
+    <h1>✅ Conexión con app.py exitosa</h1>
+
+    <p>Registros: {{ registros }}</p>
+    <p>Columnas:</p>
+    <ul>
+        {% for col in columnas %}
+            <li>{{ col }}</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
-
