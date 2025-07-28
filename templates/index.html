@@ -76,6 +76,14 @@
             <div id="graph-data" style="display:none;">{{ graphJSON | safe }}</div>
         </div>
     </div>
+    <form action="/descargar_excel" method="post" class="col-md-2 d-grid ms-2">
+    <input type="hidden" name="programa" value="{{ programa }}">
+    <input type="hidden" name="modelo" value="{{ modelo }}">
+    <input type="hidden" name="prob_min" value="{{ prob_min }}">
+    <input type="hidden" name="prob_max" value="{{ prob_max }}">
+    <button type="submit" class="btn btn-success">📥 Descargar Excel</button>
+</form>
+
 
     <div class="bg-transparent p-0 m-0">
         {% include 'pie.html' %}
