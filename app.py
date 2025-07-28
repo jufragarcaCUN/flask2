@@ -1,10 +1,13 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 import pandas as pd
 import plotly.express as px
 import plotly.utils
 import json
 import os
+import io # Importar el módulo io para manejar flujos de bytes en memoria
 from dotenv import load_dotenv
+from flask import send_file
+
 
 def crear_app():
     """
@@ -30,16 +33,16 @@ def crear_app():
             modelo (str, optional): Nombre de la columna que se utilizará como eje Y en el gráfico
                                     y para el filtrado por rango. Por defecto es "Probabilidad_RANDOM FOREST".
             rango (tuple, optional): Una tupla (min_valor, max_valor) para filtrar los datos
-                                     en la columna 'modelo'. Por defecto es (0, 100).
+                                    en la columna 'modelo'. Por defecto es (0, 100).
 
         Returns:
             dict: Un diccionario que contiene:
-                  - "graphJSON": La representación JSON del gráfico Plotly, lista para incrustar en HTML.
-                  - "columnas": Una lista de los nombres de las columnas del DataFrame filtrado.
-                  - "registros": El número de filas (registros) en el DataFrame filtrado.
-                  - "df_filtrado": El DataFrame de Pandas resultante después de aplicar todos los filtros.
-                                   (Nota: este objeto no es serializable directamente a JSON en Flask para HTML,
-                                   pero se puede usar internamente si es necesario).
+                    - "graphJSON": La representación JSON del gráfico Plotly, lista para incrustar en HTML.
+                    - "columnas": Una lista de los nombres de las columnas del DataFrame filtrado.
+                    - "registros": El número de filas (registros) en el DataFrame filtrado.
+                    - "df_filtrado": El DataFrame de Pandas resultante después de aplicar todos los filtros.
+                                     (Nota: este objeto no es serializable directamente a JSON en Flask para HTML,
+                                     pero se puede usar internamente si es necesario).
         """
         try:
             df = pd.read_excel(EXCEL_PATH)
@@ -62,12 +65,11 @@ def crear_app():
                 "df_filtrado": pd.DataFrame()
             }
 
-
         # Elimina filas donde "Edad", la columna del modelo o "DescRF_Programa" tengan valores nulos.
         df = df.dropna(subset=["Edad", modelo, "DescRF_Programa"])
 
         # Aplica el filtro por el nombre del programa si se ha especificado uno.
-        if programa:
+        if programa and programa != "Todos": # Añadir "Todos" como opción para no filtrar
             df = df[df["DescRF_Programa"] == programa]
 
         # Aplica el filtro por el rango de valores para la columna del modelo.
@@ -144,9 +146,11 @@ def crear_app():
 
         # Obtiene una lista de programas únicos del DataFrame original y los ordena.
         programas = sorted(df_original["DescRF_Programa"].dropna().unique())
+        # Añade la opción "Todos" para mostrar todos los programas
+        programas.insert(0, "Todos")
 
         # Define los valores por defecto para los filtros del formulario.
-        programa_seleccionado = None
+        programa_seleccionado = "Todos"
         modelo_seleccionado = "Probabilidad_RANDOM FOREST"
         prob_min_seleccionada = 0
         prob_max_seleccionada = 100
@@ -191,10 +195,52 @@ def crear_app():
             dataFiltrada=data["df_filtrado"].to_dict(orient='records')
         )
 
+    @app.route("/descargar_excel", methods=["POST"])
+    def descargar_excel():
+        """
+        Genera un archivo Excel con los datos filtrados y lo envía al navegador.
+        """
+        # Vuelve a aplicar los mismos filtros que en la función principal
+        programa = request.form.get("programa")
+        modelo = request.form.get("modelo", "Probabilidad_RANDOM FOREST")
+        try:
+            prob_min = float(request.form.get("prob_min", 0))
+            prob_max = float(request.form.get("prob_max", 100))
+        except ValueError:
+            prob_min = 0
+            prob_max = 100
+
+        # Cargar los datos filtrados usando la función auxiliar
+        data = cargar_datos_y_grafico(programa, modelo, (prob_min, prob_max))
+        df_filtrado = data["df_filtrado"]
+
+        # Crear archivo en memoria
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df_filtrado.to_excel(writer, index=False, sheet_name="Filtrado")
+        output.seek(0)
+
+        # Enviar el archivo al navegador como descarga
+        return send_file(
+            output,
+            download_name="df_filtrado.xlsx",
+            as_attachment=True,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
     # Al final de la función crear_app(), se debe retornar la instancia de la aplicación Flask.
     # Esta es la aplicación que Gunicorn (o el servidor WSGI) importará y ejecutará.
     return app
 
 # Este bloque se ejecuta SOLAMENTE cuando el script se corre directamente (ej. 'python app.py').
 # NO se ejecuta cuando la aplicación es importada por un servidor WSGI como Gunicorn.
-# Es crucial que NO esté indentado dentro de ninguna función.
+if __name__ == "__main__":
+    # Cargar las variables de entorno si existe un archivo .env
+    load_dotenv()
+    # Llama a la función crear_app() para obtener la instancia de la aplicación Flask configurada.
+    app_instance = crear_app()
+    # Ejecuta la aplicación.
+    # 'host='0.0.0.0'' hace que la aplicación sea accesible desde cualquier dirección IP,
+    # lo cual es necesario en entornos de servidor.
+    # 'debug=True' habilita el modo de depuración (útil durante el desarrollo para ver errores).
+    app_instance.run(host='0.0.0.0', debug=True)
