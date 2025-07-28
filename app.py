@@ -15,7 +15,7 @@ def crear_app():
     Esta función encapsula toda la lógica de la aplicación, incluyendo rutas y funciones auxiliares,
     para que pueda ser importada y ejecutada por servidores WSGI (como Gunicorn en Render.com).
     """
-   app = Flask(__name__, static_folder='static', template_folder='templates')
+    app = Flask(__name__, static_folder='static', template_folder='templates')
 
 
     # Define la ruta base del directorio donde se encuentra este script.
